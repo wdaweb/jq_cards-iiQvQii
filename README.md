@@ -1,6 +1,16 @@
-# 泰山職訓前端班翻牌配對小遊戲作業
-發揮創意美化你上課完成的小遊戲，並試著加入更多功能  
+# Hello Word 跟世界說你好
+## 遊戲方式
+將該國家牌與該國語言之「你好」牌配對，計時翻完牌需花多久時間，時間越短者為最高分。
+卡牌背面花色可由右上角設定按鈕選擇，共有六種設計。
+## 設計風格
+使用國際主義設計風格(瑞士風格)搭配遊戲主題「跟世界說你好」，讓整體遊戲設計概念更有一致性。
+## 遊戲畫面預覽
+### 初始
+![image](https://github.com/wdaweb/jq_cards-iiQvQii/blob/master/img/preview-1.png)
+### 卡背花色選擇
+![image](https://github.com/wdaweb/jq_cards-iiQvQii/blob/master/img/preview-2.png)
+### 遊戲中
+![image](https://github.com/wdaweb/jq_cards-iiQvQii/blob/master/img/preview-3.png)
 
-## 注意
-請盡量使用上課教的 GUI 工具或 git 指令繳交作業  
-若使用 GitHub 網頁進行 commit 會依次數扣分
+# 泰山職訓前端班翻牌配對小遊戲作業
+

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/style.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+    rel="stylesheet">
+  <title>Hello Word</title>
+
+</head>
+
+<body>
+  <div id="infoArea">
+    <div id="timeArea" style="width:300px">
+      TIME:&nbsp;
+      <span id="text-time" style="width:50px;text-align: right;"> 0</span>
+    </div>
+    <div id="highArea">
+      High Score:&nbsp;
+      <span id="h-name" style="width:50px;text-align: right;">Nobody</span>
+      <span id="h-score" style="width:50px;text-align: right;">&nbsp;</span>
+    </div>
+    <img id="settings" src="./img/settings.svg" width="50" height="50">
+  </div>
+  <div id="game"></div>
+  <div id="btnArea">
+    <input type="button" value="START" id="btn-start">
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js'
+    integrity='sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=='
+    crossorigin='anonymous'></script>
+  <script>
+    let idx = 0
+    let time = 0
+    let highscore = { name: '', score: 0 }
+    var startAudio = new Audio('./audio/start.wav')
+    let storage = localStorage.getItem('card')
+    if (storage) {
+      storage = JSON.parse(storage)
+      highscore.name = storage.name
+      highscore.score = storage.score
+      $('#h-name').text(highscore.name)
+      $('#h-score').text(`${highscore.score} sec`)
+    }
+    for (let i = 0; i < 18; i++) {
+      $('#game').append(`
+        <div class="card">
+          <div class="card-front"></div>
+          <div class="card-back"></div>
+        </div>
+      `)
+    }
+    for (let i = 1; i < 10; i++) {
+      for (let j = 1; j < 3; j++) {
+        // 把背景圖片寫進去
+        $('.card').eq(idx).find('.card-front').css('background-image', `url(./img/${i}-${j}.svg)`)
+        $('.card').eq(idx).attr('data-card', i)
+
+        // 打散
+        const target = Math.round(Math.random() * 17)
+        $('.card').eq(target).insertAfter($('.card').eq(idx))
+        idx++
+      }
+    }
+
+    $('#settings').on('click', function () {
+
+      (async () => {
+        /* inputOptions can be an object or Promise */
+        const inputOptions = new Promise((resolve) => {
+          resolve({
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+          })
+        })
+
+        const { value: num } = await Swal.fire({
+          heightAuto: false,
+          width: '52em',
+          allowOutsideClick: false,
+          title: 'Select a Card Back',
+          input: 'radio',
+          inputValue: 1,
+          inputOptions: inputOptions,
+          imageUrl: `./img/back-all.svg`,
+          imageHeight: 320,
+          inputValidator: (value) => {
+            if (!value) {
+              return 'You need to choose something!'
+            }
+          }
+        })
+        $('.card-back').css('background-image', `url(../img/back-${num}.svg)`)
+      })()
+    })
+
+
+    // 遊戲開始！
+    $('#btn-start').on('click', function () {
+      time = 0
+      startAudio.play()
+      $('#settings').css('pointer-events', 'none')
+      $('.card').removeClass('card-ok card-open')
+      $('.card,.card-front').css('opacity', '1')
+      $(this).attr('disabled', true)
+      $('.card').mouseenter().css('cursor', 'pointer')
+      // 計時開始
+      let timer = setInterval(function () {
+        // 產生卡片
+        time++
+        $('#text-time').text(time)
+        $('#game').on('click', '.card', function () {
+          // 最多一次翻兩張，且這張牌還沒翻開
+          if ($('.card-open').length < 2 && !$(this).hasClass('card-open')) {
+            const langNumber = $(this).attr('data-card')
+            const audio = new Audio(`./audio/${langNumber}.mp3`)
+            if ($(this).css('opacity') !== '0') {
+              audio.play()
+            }
+            $(this).addClass('card-open')
+          }
+
+          // 如果翻開兩張了
+          if ($('.card-open').length === 2) {
+            // 正確-如果數字一樣
+            if ($('.card-open').eq(0).attr('data-card') === $('.card-open').eq(1).attr('data-card')) {
+              // 用 class 標記已完成
+              $('.card-open').addClass('card-ok')
+              // 將 .card-front 淡出，如果對 .card-open 淡出會把 3D 壓平只看到卡背
+              $('.card-open .card-front').fadeTo(2000, 0)
+            }
+
+            // 不管是否一樣都將卡片翻回
+            setTimeout(function () {
+              // 如果 .card-open 裡的 .card-front 透明度不是 1，把 .card-open 透明度設為 0
+              $('.card-open').each(function () {
+                if ($(this).find('.card-front').css('opacity') !== '1') {
+                  $(this).css('opacity', 0)
+                }
+              })
+              $('.card-open').removeClass('card-open')
+              // game over
+              if ($('.card-ok').length === 18) {
+                $('#settings').css('pointer-events', 'auto')
+                $('#btn-start').attr('disabled', false)
+                clearInterval(timer)
+                if (time < highscore.score || highscore.score === 0) {
+                  (async () => {
+                    const { value: input } = await Swal.fire({
+                      heightAuto: false,
+                      title: 'Congrates! You are the highest player.',
+                      imageUrl: './img/logo.svg',
+                      imageWidth: 400,
+                      imageHeight: 200,
+                      imageAlt: 'logo',
+                      allowOutsideClick: false,
+                      input: 'text',
+                      inputPlaceholder: 'Enter your name',
+                      showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                      },
+                      hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp'
+                      },
+                      inputValidator: (value) => {
+                        if (!value) {
+                          return 'You need to type something!'
+                        }
+                      }
+                    })
+                    highscore.name = input
+                    highscore.score = time
+                    $('#h-name').text(highscore.name)
+                    $('#h-score').text(`${highscore.score} sec`)
+                    localStorage.setItem('card', JSON.stringify(highscore))
+                  })()
+                } else {
+                  // 一般
+                  Swal.fire({
+                    heightAuto: false,
+                    title: 'You did a great job!',
+                    text: `Your time: ${time} seconds.`,
+                    imageUrl: './img/logo.svg',
+                    imageWidth: 400,
+                    imageHeight: 200,
+                    imageAlt: 'logo',
+                    showClass: {
+                      popup: 'animate__animated animate__fadeInDown'
+                    },
+                    hideClass: {
+                      popup: 'animate__animated animate__fadeOutUp'
+                    }
+                  })
+                }
+              }
+            }, 2000)
+          }
+        })
+      }, 1000)
+    })
+
+  </script>
+</body>
+
+</html>
